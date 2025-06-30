@@ -122,5 +122,30 @@ def test():
     except Exception as e:
         logger.error(f"Pokémon test failed: {str(e)}")
 
+@cli.command()
+def cache_stats():
+    """Show IPFS cache statistics"""
+    print(BANNER)
+    print("\n📊 IPFS Cache Statistics...")
+    
+    try:
+        from datasolver.providers.mcp.tools.pokemon import PokemonTool
+        tool = PokemonTool()
+        stats = tool.get_cache_stats()
+        
+        print(f"📈 Cache Status:")
+        print(f"  • Pinata Available: {'✅' if stats['pinata_available'] else '❌'}")
+        print(f"  • Total Entries: {stats['total_entries']}")
+        print(f"  • Valid Entries: {stats['valid_entries']}")
+        print(f"  • Expired Entries: {stats['expired_entries']}")
+        print(f"  • TTL: {stats['ttl_seconds']} seconds ({stats['ttl_seconds']//60} minutes)")
+        
+        if stats['expired_entries'] > 0:
+            cleared = tool.clear_expired_cache()
+            print(f"  • Cleared {cleared} expired entries")
+        
+    except Exception as e:
+        logger.error(f"Cache stats failed: {str(e)}")
+
 if __name__ == '__main__':
     cli()

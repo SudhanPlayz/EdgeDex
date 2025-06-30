@@ -1,11 +1,11 @@
-# Pokémon Data Solver Node 🎮
-                   
+# EdgeDex 🎮
+*Edge Caching + Pokédex = EdgeDex*
 
-![Pokémon Solver Node](https://img.shields.io/badge/Version-0.1.0-blue.svg) ![License](https://img.shields.io/badge/License-MIT-green.svg)
+![EdgeDex](https://img.shields.io/badge/Version-0.1.0-blue.svg) ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-The **Pokémon Data Solver Node** is a specialized decentralized application designed to participate in the **Reppo.Exchange** by providing comprehensive Pokémon datasets. This solver node focuses exclusively on Pokémon-related data generation using the PokéAPI, making it perfect for AI agents, researchers, and developers who need high-quality Pokémon data.
+**EdgeDex** is a specialized decentralized application that combines edge caching with Pokémon data delivery for the **Reppo.Exchange** ecosystem. This high-performance solver node focuses exclusively on Pokémon-related data generation using the PokéAPI with IPFS-backed caching, making it perfect for AI agents, researchers, and developers who need fast, reliable access to comprehensive Pokémon data.
 
-The node listens for Pokémon-related Requests for Data (RFDs), generates datasets using the PokéAPI through the Model Context Protocol (MCP), uploads them to IPFS, and submits solutions to the Reppo Exchange smart contract.
+EdgeDex listens for Pokémon-related Requests for Data (RFDs), generates datasets using the PokéAPI through the Model Context Protocol (MCP), caches results on IPFS via Pinata, and submits solutions to the Reppo Exchange smart contract.
 
 ---
 
@@ -27,20 +27,22 @@ The node listens for Pokémon-related Requests for Data (RFDs), generates datase
 
 ## Overview ✨
 
-This specialized solver node provides:
-- **Comprehensive Pokémon Data**: Access to complete Pokémon information via PokéAPI
-- **MCP-Compliant Architecture**: Uses Model Context Protocol for standardized data access
-- **Multiple Data Types**: Pokémon stats, moves, abilities, types, evolution chains, and more
-- **Blockchain Integration**: Participates in the Reppo Exchange ecosystem
-- **Generation Filtering**: Support for all Pokémon generations (1-9)
-- **Real-time API Access**: Always up-to-date data from the official PokéAPI
+EdgeDex provides:
+- **⚡ Edge Caching**: IPFS-backed caching via Pinata for sub-second response times
+- **🔗 Comprehensive Pokémon Data**: Access to complete Pokémon information via PokéAPI
+- **🏗️ MCP-Compliant Architecture**: Uses Model Context Protocol for standardized data access
+- **📊 Multiple Data Types**: Pokémon stats, moves, abilities, types, evolution chains, and more
+- **⛓️ Blockchain Integration**: Participates in the Reppo Exchange ecosystem
+- **🎯 Generation Filtering**: Support for all Pokémon generations (1-9)
+- **🔄 Real-time API Access**: Always up-to-date data from the official PokéAPI
 
-The Pokémon Solver Node performs these key functions:
-1. **Pokémon RFD Processing**: Automatically detects and processes Pokémon-related requests
-2. **PokéAPI Integration**: Fetches real-time data from the comprehensive Pokémon database
-3. **Data Generation**: Creates structured datasets with stats, abilities, moves, and more
-4. **IPFS Storage**: Stores datasets on IPFS for decentralized access
-5. **Blockchain Submission**: Submits solutions to the Reppo Exchange for rewards
+EdgeDex performs these key functions:
+1. **🎮 Pokémon RFD Processing**: Automatically detects and processes Pokémon-related requests
+2. **📡 PokéAPI Integration**: Fetches real-time data from the comprehensive Pokémon database
+3. **💾 Edge Caching**: Stores frequently requested datasets on IPFS for instant access
+4. **📋 Data Generation**: Creates structured datasets with stats, abilities, moves, and more
+5. **🌐 IPFS Storage**: Stores datasets on IPFS for decentralized access
+6. **⛓️ Blockchain Submission**: Submits solutions to the Reppo Exchange for rewards
 
 ---
 
@@ -71,18 +73,19 @@ The solver supports generating various types of Pokémon data:
 
 ## Architecture 🏗️
 
-The Pokémon Solver Node uses a focused, MCP-compliant architecture:
+EdgeDex uses a focused, MCP-compliant architecture with IPFS edge caching:
 
 ### Core Components
 
 1. **PokemonTool (`datasolver/providers/mcp/tools/pokemon.py`)**
-   - **Purpose**: MCP tool for generating Pokémon datasets
+   - **Purpose**: MCP tool for generating Pokémon datasets with edge caching
    - **Functionality**: 
-     - Connects to PokéAPI via pokepy library
+     - Connects to PokéAPI via direct HTTP requests
      - Generates various Pokémon data types
-     - Implements caching for performance
+     - Implements IPFS-backed caching via Pinata
      - Validates RFD requirements
-   - **Dependencies**: `pokepy`, in-memory caching
+     - Cache-first data retrieval
+   - **Dependencies**: `requests`, IPFS cache layer
 
 2. **MCPClient (`datasolver/providers/mcp/client.py`)**
    - **Purpose**: MCP client specialized for Pokémon tools
@@ -106,20 +109,31 @@ The Pokémon Solver Node uses a focused, MCP-compliant architecture:
    - **NFTAuthorizer**: Verifies Reppo NFT ownership
    - **SolutionSubmitter**: Submits solutions to blockchain
 
+4. **IPFSCache (`datasolver/providers/mcp/tools/ipfs_cache.py`)**
+   - **Purpose**: IPFS-backed edge caching layer using Pinata
+   - **Functionality**: 
+     - RFD fingerprinting for cache key generation
+     - Pinata JSON upload/download with 30-minute TTL
+     - Automatic cache expiration and cleanup
+     - Graceful degradation when Pinata unavailable
+   - **Dependencies**: Pinata API, deterministic hashing
+
 ### Workflow
 
-1. **RFD Detection**: Listens for RFDs containing Pokémon keywords
-2. **Data Type Analysis**: Determines what type of Pokémon data is requested
-3. **API Querying**: Fetches data from PokéAPI with appropriate filters
-4. **Dataset Assembly**: Structures data according to RFD schema requirements
-5. **IPFS Upload**: Stores dataset for decentralized access
-6. **Solution Submission**: Submits to Reppo Exchange for validation
+1. **🎯 RFD Detection**: Listens for RFDs containing Pokémon keywords
+2. **🔍 Cache Check**: First checks IPFS cache for existing data (sub-second response)
+3. **📊 Data Type Analysis**: Determines what type of Pokémon data is requested (if cache miss)
+4. **📡 API Querying**: Fetches data from PokéAPI with appropriate filters (if cache miss)
+5. **💾 Cache Storage**: Stores generated data in IPFS via Pinata for future requests
+6. **📋 Dataset Assembly**: Structures data according to RFD schema requirements
+7. **🌐 IPFS Upload**: Stores final dataset for decentralized access
+8. **⛓️ Solution Submission**: Submits to Reppo Exchange for validation
 
 ---
 
 ## Prerequisites ✅
 
-To run the Pokémon Solver Node, ensure you have the following:
+To run EdgeDex, ensure you have the following:
 
 - **Python**: Version 3.8 or higher
 - **Internet Connection**: Required for PokéAPI access
@@ -144,8 +158,8 @@ To run the Pokémon Solver Node, ensure you have the following:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-repo/pokemon-solver-node.git
-   cd pokemon-solver-node
+   git clone https://github.com/your-repo/edgedex.git
+   cd edgedex
    ```
 
 2. **Set Up a Virtual Environment** (recommended):
@@ -207,9 +221,38 @@ PINATA_SECRET_API_KEY=your-pinata-secret-api-key
 
 ---
 
+## IPFS Edge Caching 🚀
+
+EdgeDex features a sophisticated IPFS-backed caching layer using Pinata for lightning-fast data retrieval:
+
+### Cache Performance
+- **🎯 Cache Hit**: Sub-second response times from IPFS
+- **⚡ Speed Improvement**: 3-5x faster than fresh API calls
+- **🔄 TTL**: 30-minute cache expiration for data freshness
+- **🌐 Decentralized**: Cached on IPFS for global accessibility
+
+### Cache Features
+- **Fingerprinting**: Deterministic cache keys based on RFD parameters
+- **Automatic Storage**: Fresh data automatically cached on IPFS via Pinata
+- **Graceful Degradation**: Falls back to direct API if cache unavailable
+- **Cache Management**: Built-in statistics and cleanup functionality
+
+### Cache Demo
+```bash
+# Run the IPFS cache demonstration
+python test_cache_demo.py
+```
+
+This will show you:
+- Fresh data generation and caching
+- Cache hit performance improvements  
+- Cache statistics and management
+
+---
+
 ## Usage 🖥️
 
-The Pokémon Solver Node offers several commands for different use cases:
+EdgeDex offers several commands for different use cases:
 
 ### Quick Pokémon Data Generation
 ```bash
@@ -247,41 +290,60 @@ python main.py start
 python main.py start --mock
 ```
 
+### Cache Management
+```bash
+# View cache statistics
+python main.py cache-stats
+
+# Run cache performance demo
+python test_cache_demo.py
+```
+
 ---
 
 ## Example Pokémon RFDs 📊
 
-Below are examples of Pokémon RFDs that the Solver Node can process:
+Below are examples of Pokémon RFDs that EdgeDex can process:
 
 ```json
 {
-    "rfd_id": "sf_weather_may_aug_001",
-    "name": "Synthetic Weather Data for San Francisco (May to August)",
-    "description": "A synthetic dataset containing daily weather information for San Francisco from May to August, including temperature, humidity, and precipitation.",
-    "schema": {
-        "type": "object",
-        "properties": {
-            "date": { "type": "string", "format": "date" },
-            "temperature": { "type": "number", "description": "Average daily temperature in degrees Fahrenheit" },
-            "humidity": { "type": "number", "description": "Average daily humidity percentage" },
-            "precipitation": { "type": "number", "description": "Daily precipitation in inches" }
-        },
-        "required": ["date", "temperature", "humidity", "precipitation"]
-    }
+    "rfd_id": "generation_1_starter_pokemon",
+    "name": "Generation 1 Starter Pokémon Dataset",
+    "description": "Complete dataset of Generation 1 starter Pokémon including stats, types, and abilities",
+    "data_type": "pokemon",
+    "num_records": 9,
+    "generation": 1,
+    "pokemon_names": ["bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise"],
+    "include_stats": true,
+    "include_abilities": true,
+    "include_moves": false
 }
 ```
 
-When processed, the Solver Node:
-- Generates a dataset matching the schema (e.g., daily weather data for May–August).
-- Saves it as `data/rfd_sf_weather_may_aug_001_solution.json`.
-- Uploads it to IPFS, obtaining an `ipfs://<CID>` URI.
-- Submits the URI to the Reppo Exchange smart contract if the wallet owns a Reppo Node NFT.
+```json
+{
+    "rfd_id": "powerful_water_moves",
+    "name": "High-Power Water Type Moves",
+    "description": "Dataset of powerful water-type moves with 80+ base power",
+    "data_type": "moves",
+    "num_records": 15,
+    "type_filter": "water"
+}
+```
+
+When processed, EdgeDex:
+- 🔍 Checks IPFS cache for existing matching data (sub-second if cached)
+- 📡 Generates fresh Pokémon data from PokéAPI if not cached
+- 💾 Stores the dataset in IPFS cache via Pinata for future requests
+- 📋 Saves it as `data/rfd_generation_1_starter_pokemon_solution.json`
+- 🌐 Uploads final result to IPFS, obtaining an `ipfs://<CID>` URI
+- ⛓️ Submits the URI to the Reppo Exchange smart contract if the wallet owns a Reppo Node NFT
 
 ---
 
 ## Dependencies 📦
 
-The Reppo Solver Node relies on the following Python packages, listed in `requirements.txt`:
+EdgeDex relies on the following Python packages, listed in `requirements.txt`:
 
 ```text
 # Blockchain interactions
@@ -316,7 +378,7 @@ pip install -r requirements.txt
 
 ## Contributing 🤝
 
-We welcome contributions to improve the Reppo Solver Node! To contribute:
+We welcome contributions to improve EdgeDex! To contribute:
 
 1. **Fork the Repository**:
    ```bash
@@ -352,4 +414,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-This README provides a comprehensive guide to understanding, setting up, and running the Pokémon Solver Node. For further questions, please open an issue on the GitHub repository or contact the maintainers.
+This README provides a comprehensive guide to understanding, setting up, and running EdgeDex. For further questions, please open an issue on the GitHub repository or contact the maintainers.

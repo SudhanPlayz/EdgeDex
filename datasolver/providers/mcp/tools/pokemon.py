@@ -5,6 +5,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional
 from .tool import MCPTool
+from .ipfs_cache import IPFSCache
 
 logger = logging.getLogger('PokemonTool')
 
@@ -21,13 +22,14 @@ class PokemonTool(MCPTool):
     """
     
     def __init__(self):
-        """Initialize the Pokémon tool with direct API access."""
+        """Initialize the Pokémon tool with direct API access and IPFS cache."""
         try:
             import requests
             self.session = requests.Session()
             self.base_url = "https://pokeapi.co/api/v2"
-            self.cache = {}  # Simple in-memory cache
-            logger.info("Initialized Pokémon tool with direct PokéAPI access")
+            self.cache = {}  # Simple in-memory cache for API responses
+            self.ipfs_cache = IPFSCache(ttl_minutes=30)  # 30-minute TTL for IPFS cache
+            logger.info("Initialized Pokémon tool with direct PokéAPI access and IPFS cache")
         except ImportError:
             logger.error("requests not installed. Install with: pip install requests")
             raise
@@ -165,9 +167,23 @@ class PokemonTool(MCPTool):
             return False
     
     def generate_data(self, rfd: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate Pokémon dataset according to the RFD."""
+        """Generate Pokémon dataset according to the RFD with IPFS caching."""
         try:
-            # Extract parameters from RFD
+            # 1. Try IPFS cache first
+            cached_result = self.ipfs_cache.get_cached(rfd)
+            if cached_result is not None:
+                logger.info("Returning cached result from IPFS")
+                # Ensure cached result has the right structure
+                if isinstance(cached_result, dict) and 'data' in cached_result:
+                    cached_result['cached'] = True
+                    cached_result['source'] = 'IPFS Cache via Pinata'
+                    return cached_result
+                else:
+                    # If cached result doesn't have expected structure, treat as fresh data
+                    logger.warning("Cached result has unexpected structure, treating as fresh")
+                    pass
+            
+            # 2. Generate fresh data if not in cache
             data_type = rfd.get("data_type") or rfd.get("type") or rfd.get("pokemon_data_type", "pokemon")
             num_records = rfd.get("num_records", 10)
             pokemon_names = rfd.get("pokemon_names", [])
@@ -178,7 +194,7 @@ class PokemonTool(MCPTool):
             include_abilities = rfd.get("include_abilities", True)
             include_moves = rfd.get("include_moves", False)
             
-            logger.info(f"Generating {data_type} dataset with {num_records} records")
+            logger.info(f"Generating fresh {data_type} dataset with {num_records} records")
             
             # Generate data based on type
             if data_type == "pokemon":
@@ -197,16 +213,33 @@ class PokemonTool(MCPTool):
             else:
                 raise ValueError(f"Unsupported data type: {data_type}")
             
-            return {
+            result = {
                 "data": records,
                 "count": len(records),
                 "data_type": data_type,
-                "source": "PokéAPI via direct requests"
+                "source": "PokéAPI via direct requests",
+                "cached": False
             }
+            
+            # 3. Store result in IPFS cache
+            cache_stored = self.ipfs_cache.store_cached(rfd, result)
+            if cache_stored:
+                result["cache_stored"] = True
+                logger.info("Result stored in IPFS cache")
+            
+            return result
             
         except Exception as e:
             logger.error(f"Error generating Pokémon data: {e}")
             raise RuntimeError(f"Failed to generate Pokémon data: {e}")
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        return self.ipfs_cache.get_cache_stats()
+    
+    def clear_expired_cache(self) -> int:
+        """Clear expired cache entries."""
+        return self.ipfs_cache.clear_expired()
     
     def _generate_pokemon_data(self, num_records: int, pokemon_names: List[str], 
                               pokemon_ids: List[int], generation: Optional[int],
