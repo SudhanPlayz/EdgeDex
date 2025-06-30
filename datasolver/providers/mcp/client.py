@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .provider import MCPProvider
 from .tools.tool import MCPTool
+from .tools.pokemon import PokemonTool
 
 logger = logging.getLogger('MCPClient')
 
@@ -17,11 +18,13 @@ class MCPClient(MCPProvider):
         """Initialize MCP client
         
         Args:
-            tools: List of MCP tool classes to register (optional)
+            tools: List of MCP tool classes to register (optional, defaults to [PokemonTool])
         """
         super().__init__()
         self._tools = {}
-        self._initialize_client(tools or [])
+        # Default to PokemonTool if no tools specified
+        default_tools = [PokemonTool] if tools is None else tools
+        self._initialize_client(default_tools)
     
     def _initialize_client(self, tool_classes: List[Type[MCPTool]]):
         """Initialize MCP client with tools
@@ -30,38 +33,15 @@ class MCPClient(MCPProvider):
             tool_classes: List of MCP tool classes to register
         """
         try:
-            # Import MCP SDK
-            from mcp_sdk import MCPClient as SDKClient
-            
-            # Get server configuration from environment
-            server_url = os.getenv("MCP_SERVER_URL")
-            if not server_url:
-                raise ValueError("MCP_SERVER_URL must be set in .env file")
-                
-            # Optional server configuration
-            server_config = {
-                "timeout": int(os.getenv("MCP_SERVER_TIMEOUT", "30")),
-                "retries": int(os.getenv("MCP_SERVER_RETRIES", "3")),
-                "api_key": os.getenv("MCP_SERVER_API_KEY"),
-                "verify_ssl": os.getenv("MCP_SERVER_VERIFY_SSL", "true").lower() == "true"
-            }
-            
-            # Initialize SDK client
-            self.client = SDKClient(server_url, **server_config)
-            
-            # Register tools
+            # Register tools directly (simplified MCP implementation)
             for tool_class in tool_classes:
                 tool = tool_class()
                 self._tools[tool.name] = tool
-                self.client.register_tool(tool)
                 logger.info(f"Registered MCP tool: {tool.name}")
             
             if not self._tools:
                 logger.warning("No MCP tools registered")
             
-        except ImportError:
-            logger.error("MCP SDK not installed. Install with: pip install mcp-sdk")
-            raise
         except Exception as e:
             logger.error(f"Failed to initialize MCP client: {e}")
             raise
@@ -73,7 +53,6 @@ class MCPClient(MCPProvider):
             tool: MCP tool instance to register
         """
         self._tools[tool.name] = tool
-        self.client.register_tool(tool)
         logger.info(f"Registered MCP tool: {tool.name}")
     
     def get_tool(self, tool_name: str) -> Optional[MCPTool]:
@@ -122,8 +101,8 @@ class MCPClient(MCPProvider):
                 raise ValueError(f"RFD not compatible with {tool_name} tool")
             
             # Generate data
-            records = tool.generate(rfd)
-            return {"data": records}
+            result = tool.generate_data(rfd)
+            return result
             
         except Exception as e:
             logger.error(f"Failed to generate dataset: {e}")

@@ -46,6 +46,9 @@ class SolverNode:
         # Set wallet address
         if self.mock_mode:
             self.wallet_address = "0xMockWalletAddress"
+        elif self.test_mode:
+            # For test mode, use a default wallet address if none provided
+            self.wallet_address = os.getenv("WALLET_ADDRESS", "0xTestWalletAddress")
         else:
             self.wallet_address = os.getenv("WALLET_ADDRESS")
             if not self.wallet_address:
@@ -109,8 +112,8 @@ class SolverNode:
                 self.logger.error(f"Failed to generate dataset for RFD #{rfd_id}")
                 return None
             
-            # In mock mode, generate mock storage and transaction info
-            if self.mock_mode:
+            # In mock or test mode, generate mock storage and transaction info
+            if self.mock_mode or self.test_mode:
                 mock_cid = f"mockCID_{rfd_id}_{int(time.time())}"
                 mock_tx = f"0x{'0' * 40}_{rfd_id}_{int(time.time())}"
                 results = {
@@ -155,21 +158,21 @@ class SolverNode:
         else:
             self._run_production_mode()
     
-    def _run_test_mode(self):
+    def _run_test_mode(self, rfd_file: str = "sample_rfd.json"):
         """Run in test/mock mode"""
-        print("\nProcessing sample RFD...")
+        print(f"\nProcessing RFD file: {rfd_file}")
         try:
-            with open("sample_rfd.json") as f:
+            with open(rfd_file) as f:
                 sample_rfd = json.load(f)
             results = self.process_rfd(sample_rfd)
             if results:
-                print(f"Successfully processed sample RFD: {results}")
+                print(f"Successfully processed RFD: {results}")
             else:
-                print("Failed to process sample RFD")
+                print("Failed to process RFD")
         except FileNotFoundError:
-            print("Error: sample_rfd.json not found. Please create a sample RFD file.")
+            print(f"Error: {rfd_file} not found. Please create an RFD file.")
         except Exception as e:
-            print(f"Error processing sample RFD: {str(e)}")
+            print(f"Error processing RFD: {str(e)}")
     
     def _run_production_mode(self):
         """Run in production mode"""

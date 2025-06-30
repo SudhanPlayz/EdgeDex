@@ -1,0 +1,52 @@
+{
+  "rfd_id": "pokemon_001",
+  "name": "Pokémon Dataset for Generation 1",
+  "description": "Generate a dataset containing first generation Pokémon with their stats and abilities",
+  "data_type": "pokemon",
+  "generation": 1,
+  "num_records": 10,
+  "include_stats": true,
+  "include_abilities": true,
+  "include_moves": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "description": "Pokémon ID number"
+      },
+      "name": {
+        "type": "string",
+        "description": "Pokémon name"
+      },
+      "height": {
+        "type": "integer",
+        "description": "Pokémon height in decimeters"
+      },
+      "weight": {
+        "type": "integer",
+        "description": "Pokémon weight in hectograms"
+      },
+      "types": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Pokémon types"
+      },
+      "base_experience": {
+        "type": "integer",
+        "description": "Base experience gained when defeating this Pokémon"
+      },
+      "stats": {
+        "type": "object",
+        "description": "Base stats for the Pokémon"
+      },
+      "abilities": {
+        "type": "array",
+        "description": "List of abilities this Pokémon can have"
+      }
+    },
+    "required": ["id", "name", "height", "weight", "types", "base_experience"]
+  }
+} 
